@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ppmtool.dao.ProjectDAO;
 import com.ppmtool.entities.Project;
+import com.ppmtool.exceptions.ProjectIdException;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -16,7 +17,12 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	@Transactional
 	public Project saveOrUpdate(Project project) {
-		return projectDao.save(project);
+		try{
+			project.setProjectIdentifier(project.getProjectIdentifier().toUpperCase());
+			return projectDao.save(project);
+		} catch(Exception ex){
+			throw new ProjectIdException("Project ID '"+project.getProjectIdentifier().toUpperCase()+"' already exists! ");
+		}
 	}
 	
 }
