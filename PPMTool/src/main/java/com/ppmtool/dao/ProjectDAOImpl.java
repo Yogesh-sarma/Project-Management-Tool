@@ -17,7 +17,7 @@ public class ProjectDAOImpl implements ProjectDAO {
 	private SessionFactory sessionfactory;
 	
 	@Override
-	public List<Project> getProjects() {
+	public List<Project> findAllProjects() {
 		Session session = sessionfactory.getCurrentSession();
 		
 		Query<Project> query = session.createQuery("from Project",Project.class);
@@ -36,20 +36,18 @@ public class ProjectDAOImpl implements ProjectDAO {
 	}
 
 	@Override
-	public Project findById(Long theId) {
+	public Project findByProjectIdentifier(String projectId) {
 		Session session = sessionfactory.getCurrentSession();
-		
-		Project project = session.get(Project.class, theId);
+		Query<Project> theQuery = session.createQuery("from Project where project_identifier=:projectIdentifier", Project.class);
+		theQuery.setParameter("projectIdentifier", projectId);
+		Project project = theQuery.getResultList().stream().findFirst().orElse(null);
 		return project;
 	}
 
 	@Override
-	public void deleteById(Long theId) {
+	public void deleteProject(Project project) {
 		Session session = sessionfactory.getCurrentSession();
-		Query<Project> theQuery= session.createQuery("delete from Customer where id=:theCustomerId",Project.class);
-		theQuery.setParameter("theCustomerId", theId);
-		theQuery.executeUpdate();
-
+		session.delete(project);
 	}
 
 	@Override
@@ -69,5 +67,6 @@ public class ProjectDAOImpl implements ProjectDAO {
 		
 		return projects;
 	}
+
 
 }

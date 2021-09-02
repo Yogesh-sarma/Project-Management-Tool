@@ -30,7 +30,7 @@ public class Project {
 	
 	@Column(name="project_identifier", updatable = false, unique = true)
 	@NotBlank(message="Project Identifier cannot be blank")
-	@Size(min = 4, max = 5, message="Please use 4-5 character identifier")
+	@Size(min = 4, max = 8, message="Please use 4-8 character identifier")
 	private String projectIdentifier;
 	
 	@Column(name="description")

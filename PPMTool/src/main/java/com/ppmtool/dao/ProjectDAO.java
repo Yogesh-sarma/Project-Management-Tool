@@ -5,13 +5,13 @@ import java.util.List;
 import com.ppmtool.entities.Project;
 
 public interface ProjectDAO {
-	public List<Project> getProjects();
+	public List<Project> findAllProjects();
 
 	public Project save(Project theProject);
 
-	public Project findById(Long theId);
+	public Project findByProjectIdentifier(String projectId);
 
-	public void deleteById(Long theId);
+	public void deleteProject(Project project);
 
 	public List<Project> searchProjects(String theSearchName);
 
