@@ -3,6 +3,9 @@ import { getProject, createProject } from '../../actions/projectActions';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
+import { getAllUsers } from '../../actions/userActions';
+import { getProjectUsers } from '../../actions/projectActions';
+import ErrorMessage from '../ErrorMessage';
 
 class UpdateProject extends Component {
     //set state
@@ -16,11 +19,19 @@ class UpdateProject extends Component {
             description: "",
             start_date: "",
             end_date: "",
+            usernames:[],
             errors: {}
         }
         this.onChange = this.onChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
+        this.handleSelectChange = this.handleSelectChange.bind(this);
+        this.displayUsers = this.displayUsers.bind(this);
     }
+
+    handleSelectChange (event) {
+        const selectedValues = Array.from(event.target.selectedOptions, (option) => option.value);
+        this.setState({[event.target.name] : selectedValues})
+    };
 
     componentWillReceiveProps(nextProps) {
 
@@ -28,14 +39,16 @@ class UpdateProject extends Component {
             this.setState({ errors: nextProps.errors });
         }
 
+        console.log(nextProps.project);
         const {
             id,
             projectName,
             projectIdentifier,
             description,
             start_date,
-            end_date
-        } = nextProps.project
+            end_date,
+            usernames
+        } = nextProps.project.project
 
         this.setState({
             id,
@@ -43,7 +56,8 @@ class UpdateProject extends Component {
             projectIdentifier,
             description,
             start_date,
-            end_date
+            end_date,
+            usernames
         });
     }
 
@@ -51,6 +65,20 @@ class UpdateProject extends Component {
     componentDidMount() {
         const { id } = this.props.match.params;
         this.props.getProject(id, this.props.history);
+        this.props.getAllUsers();
+        this.props.getProjectUsers(id);
+    }
+
+    displayUsers(user){
+        const { project } = this.props;
+        const projectUsers = project.usernames;
+        if(projectUsers && projectUsers.length>0){
+            if(projectUsers.includes(user)){
+                return <option key={user} value={user} selected>{user}</option>
+            }
+        }
+        return <option key={user} value={user}>{user}</option>
+
     }
 
     onChange(e) {
@@ -66,8 +94,10 @@ class UpdateProject extends Component {
             projectIdentifier: this.state.projectIdentifier,
             description: this.state.description,
             start_date: this.state.start_date,
-            end_date: this.state.end_date
+            end_date: this.state.end_date,
+            users: this.state.usernames
         };
+        console.log(updateProject);
 
         this.props.createProject(updateProject, this.props.history);
     }
@@ -75,6 +105,9 @@ class UpdateProject extends Component {
     render() {
 
         const { errors } = this.state;
+        const { user }  = this.props;
+        console.log(user)
+        
 
         return (
             <div className="project">
@@ -117,7 +150,15 @@ class UpdateProject extends Component {
                                     <input type="date" className="form-control form-control-lg" name="end_date" value={this.state.end_date} onChange={this.onChange} />
                                 </div>
 
+                                <div className="form-group">
+                                    <label htmlFor="selectUsers">Edit users of the project(ctrl + click to select multiple)</label>
+                                    <select multiple className="form-control" id="selectUsers" name="usernames" value={this.state.usernames} onChange={this.handleSelectChange}>
+                                        {user.usernames.map(this.displayUsers)}
+                                    </select>
+                                </div>
+
                                 <input type="submit" className="btn btn-primary btn-block mt-4" />
+                                {this.state.errors && <ErrorMessage message={this.state.errors.message}/>}
                             </form>
                         </div>
                     </div>
@@ -132,12 +173,16 @@ UpdateProject.propTypes = {
     getProject: PropTypes.func.isRequired,
     createProject: PropTypes.func.isRequired,
     project: PropTypes.object.isRequired,
+    getAllUsers: PropTypes.func.isRequired,
+    getProjectUsers: PropTypes.func.isRequired,
+    user: PropTypes.object.isRequired,
     errors: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
-    project: state.project.project,
+    user: state.user,
+    project: state.project,
     errors: state.errors
 });
 
-export default connect(mapStateToProps, { getProject, createProject })(UpdateProject);
+export default connect(mapStateToProps, { getProject, createProject, getAllUsers, getProjectUsers })(UpdateProject);

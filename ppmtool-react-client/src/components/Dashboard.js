@@ -4,6 +4,7 @@ import CreateProjectButton from './Project/CreateProjectButton';
 import { connect } from 'react-redux';
 import { getProjects } from '../actions/projectActions';
 import PropTypes from 'prop-types';
+import ErrorMessage from './ErrorMessage';
 
 class Dashboard extends Component {
 
@@ -14,6 +15,7 @@ class Dashboard extends Component {
 
     render() {
 
+        console.log(this.props);
         const { projects } = this.props.project;
 
         return (
@@ -33,6 +35,7 @@ class Dashboard extends Component {
                             ))
 
                             }
+                            {this.props.errors && <ErrorMessage message={this.props.errors.message}/>}
 
 
                         </div>
@@ -49,12 +52,14 @@ class Dashboard extends Component {
 
 Dashboard.propTypes = {
     project: PropTypes.object.isRequired,
-    getProjects: PropTypes.func.isRequired
+    getProjects: PropTypes.func.isRequired,
+    errors: PropTypes.object.isRequired
 }
 
 
 const mapStateToProps = state => ({
-    project: state.project
+    project: state.project,
+    errors: state.errors
 })
 
 export default connect(mapStateToProps, { getProjects })(Dashboard);

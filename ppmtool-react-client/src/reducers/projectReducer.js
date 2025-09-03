@@ -1,8 +1,9 @@
-import { GET_PROJECTS, GET_PROJECT, DELETE_PROJECT } from '../actions/types';
+import { GET_PROJECTS, GET_PROJECT, DELETE_PROJECT, GET_PROJECT_USERNAMES } from '../actions/types';
 
 const initialState = {
     projects: [],
-    project: {}
+    project: {},
+    usernames: []
 };
 
 export default function (state = initialState, action) {
@@ -26,6 +27,12 @@ export default function (state = initialState, action) {
                     project => project.projectIdentifier !== action.payload
                 )
             };
+
+        case GET_PROJECT_USERNAMES:
+            return {
+                ...state,
+                usernames: action.payload
+            }
 
         default:
             return state;

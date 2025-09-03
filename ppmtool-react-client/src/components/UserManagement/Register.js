@@ -14,6 +14,7 @@ class Register extends Component {
             fullName: "",
             password: "",
             confirmPassword: "",
+            role: "ROLE_MEMBER",
             errors: {}
         };
         this.onChange = this.onChange.bind(this);
@@ -45,9 +46,11 @@ class Register extends Component {
             username: this.state.username,
             fullName: this.state.fullName,
             password: this.state.password,
-            confirmPassword: this.state.confirmPassword
+            confirmPassword: this.state.confirmPassword,
+            role: this.state.role
         }
 
+        console.log(newUser);
         this.props.createNewUser(newUser, this.props.history);
     }
 
@@ -104,6 +107,19 @@ class Register extends Component {
                                             <div className="invalid-feedback">{errors.confirmPassword}</div>
                                         )
                                     }
+                                </div>
+                                <label className='mx-2'>Role:</label>
+                                <div className="form-check form-check-inline">
+                                    <input className="form-check-input" type="radio" name="role" id="manager" value="ROLE_MANAGER" onChange={this.onChange}/>
+                                    <label className="form-check-label" htmlFor="manager">
+                                        Manager
+                                    </label>
+                                </div>
+                                <div className="form-check form-check-inline">
+                                    <input className="form-check-input" type="radio" name="role" id="member" value="ROLE_MEMBER" onChange={this.onChange} checked/>
+                                    <label className="form-check-label" htmlFor="member">
+                                        Member
+                                    </label>
                                 </div>
                                 <input type="submit" className="btn btn-info btn-block mt-4" />
                             </form>

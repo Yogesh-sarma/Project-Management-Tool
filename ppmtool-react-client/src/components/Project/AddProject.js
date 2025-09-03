@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { createProject } from '../../actions/projectActions';
+import { createProject, getProjectUsers } from '../../actions/projectActions';
 import classnames from 'classnames';
+import ErrorMessage from '../ErrorMessage';
+import { getAllUsers } from '../../actions/userActions';
 
 class AddProject extends Component {
     constructor() {
@@ -14,14 +16,18 @@ class AddProject extends Component {
             description: "",
             start_date: "",
             end_date: "",
+            users: [],
             errors: {}
         }
 
         this.onChange = this.onChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
-
+        this.handleSelectChange = this.handleSelectChange.bind(this);
     }
 
+    componentDidMount(){
+        this.props.getAllUsers();
+    }
     //life cycle hooks
     componentWillReceiveProps(nextProps) {
         if (nextProps.errors) {
@@ -35,23 +41,31 @@ class AddProject extends Component {
         )
     }
 
+    handleSelectChange (event) {
+        console.log(event.target.selectedOptions)
+        const selectedValues = Array.from(event.target.selectedOptions, (option) => option.value);
+        console.log(selectedValues);
+        this.setState({[event.target.name] : selectedValues})
+    };
+
     onSubmit(e) {
-
         e.preventDefault();
-
-
         const newProject = {
             "projectName": this.state.projectName,
             "projectIdentifier": this.state.projectIdentifier,
             "description": this.state.description,
             "start_date": this.state.start_date,
-            "end_date": this.state.end_date
+            "end_date": this.state.end_date,
+            "listOfUsers": this.state.users
         }
-        this.props.createProject(newProject, this.props.history)
+        console.log(newProject);
+        this.props.createProject(newProject, this.props.history)       
     }
 
     render() {
         const { errors } = this.state;
+        const { user }  = this.props;
+        const { project } = this.props;
 
         return (
             <div>
@@ -99,13 +113,25 @@ class AddProject extends Component {
                                         <input type="date" className="form-control form-control-lg" name="end_date" value={this.state.end_date} onChange={this.onChange} />
                                     </div>
 
+                                    <div className="form-group">
+                                        <label htmlFor="selectUsers">Add users to the project(ctrl + click to select multiple)</label>
+                                        <select multiple className="form-control" id="selectUsers" name="users" value={this.state.users} onChange={this.handleSelectChange}>
+                                            {user.usernames.map((user) => (
+                                                <option key={user} value={user}>
+                                                    {user}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
                                     <input type="submit" className="btn btn-primary btn-block mt-4" />
+
+                                    {this.state.errors && <ErrorMessage message={this.state.errors.message}/>}
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         )
     }
@@ -113,11 +139,17 @@ class AddProject extends Component {
 
 AddProject.propTypes = {
     createProject: PropTypes.func.isRequired,
+    getAllUsers: PropTypes.func.isRequired,
+    getProjectUsers: PropTypes.func.isRequired,
+    user: PropTypes.object.isRequired,
+    project: PropTypes.object.isRequired,
     errors: PropTypes.object.isRequired
 }
 
 const mapStateToProps = state => ({
+    user: state.user,
+    project: state.project,
     errors: state.errors
 })
 
-export default connect(mapStateToProps, { createProject })(AddProject);
+export default connect(mapStateToProps, { createProject, getAllUsers, getProjectUsers })(AddProject);

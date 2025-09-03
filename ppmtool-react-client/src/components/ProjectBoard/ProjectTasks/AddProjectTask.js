@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
 import { addProjectTask } from '../../../actions/backlogActions';
+import { getProjectUsers } from '../../../actions/projectActions';
 import PropTypes from 'prop-types';
 
 class AddProjectTask extends Component {
@@ -10,6 +11,7 @@ class AddProjectTask extends Component {
     constructor(props) {
         super(props)
         const { id } = this.props.match.params;
+        console.log(this.props)
 
         this.state = {
             summary: "",
@@ -18,6 +20,8 @@ class AddProjectTask extends Component {
             priority: 0,
             dueDate: "",
             projectIdentifier: id,
+            assignTo: "",
+            projectUsers:[],
             errors: {}
         };
         this.onChange = this.onChange.bind(this);
@@ -25,12 +29,22 @@ class AddProjectTask extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log(nextProps)
         if (nextProps.errors) {
             this.setState({ errors: nextProps.errors });
         }
+        if(nextProps.project.usernames){
+            this.setState({projectUsers: nextProps.project.usernames});
+        }
+    }
+
+    componentDidMount(){
+        this.props.getProjectUsers(this.props.match.params.id)
     }
 
     onChange(e) {
+        console.log(e.target.name)
+        console.log(e.target.value)
         this.setState({ [e.target.name]: e.target.value })
     }
 
@@ -42,9 +56,11 @@ class AddProjectTask extends Component {
             acceptanceCriteria: this.state.acceptanceCriteria,
             status: this.state.status,
             priority: this.state.priority,
-            dueDate: this.state.dueDate
+            dueDate: this.state.dueDate,
+            username: this.state.assignTo
         };
 
+        console.log(newTask);
         this.props.addProjectTask(this.state.projectIdentifier, newTask, this.props.history);
     }
 
@@ -97,6 +113,16 @@ class AddProjectTask extends Component {
                                         <option value="DONE">DONE</option>
                                     </select>
                                 </div>
+                                <div className="form-group">
+                                    <select className="form-control form-control-lg" name="assignTo" value={this.state.assignTo} onChange={this.onChange}>
+                                        <option value="">Assign To</option>
+                                        {this.state.projectUsers.map((user) => (
+                                            <option key={user} value={user}>
+                                                {user}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
                                 <input type="submit" className="btn btn-primary btn-block mt-4" />
                             </form>
@@ -111,11 +137,14 @@ class AddProjectTask extends Component {
 
 AddProjectTask.propTypes = {
     addProjectTask: PropTypes.func.isRequired,
+    getProjectUsers: PropTypes.func.isRequired,
+    project: PropTypes.object.isRequired,
     errors: PropTypes.object.isRequired
 }
 
 const mapStateToProps = state => ({
-    errors: state.errors
+    errors: state.errors,
+    project: state.project
 })
 
-export default connect(mapStateToProps, { addProjectTask })(AddProjectTask);
+export default connect(mapStateToProps, { addProjectTask, getProjectUsers })(AddProjectTask);

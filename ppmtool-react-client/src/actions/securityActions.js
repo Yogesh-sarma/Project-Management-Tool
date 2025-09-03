@@ -35,6 +35,7 @@ export const login = LoginRequest => async dispatch => {
         })
 
     } catch (error) {
+        console.log(error);
         dispatch({
             type: GET_ERRORS,
             payload: error.response.data

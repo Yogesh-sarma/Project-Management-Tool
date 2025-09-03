@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { deleteProjectTask } from '../../../actions/backlogActions';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import ErrorMessage from '../../ErrorMessage';
 
 class ProjectTask extends Component {
 
@@ -12,6 +13,7 @@ class ProjectTask extends Component {
 
     render() {
         const { project_task } = this.props;
+        console.log(project_task)
         let priorityString;
         let priorityClass;
 
@@ -40,6 +42,9 @@ class ProjectTask extends Component {
                     <p className="card-text text-truncate">
                         {project_task.acceptanceCriteria}
                     </p>
+                    <p className="card-text text-truncate">
+                        Assigned to: {project_task.username}
+                    </p>
                     <Link to={`/updateProjectTask/${project_task.projectIdentifier}/${project_task.projectSequence}`} className="btn btn-primary">
                         View / Update Task
                     </Link>
@@ -48,13 +53,20 @@ class ProjectTask extends Component {
                         Delete
                     </button>
                 </div>
+                
+                {this.props.errors && <ErrorMessage message={this.props.errors.message}/>}
             </div>
         )
     }
 }
 
 ProjectTask.propTypes = {
-    deleteProjectTask: PropTypes.func.isRequired
+    deleteProjectTask: PropTypes.func.isRequired,
+    errors: PropTypes.object.isRequired
 }
 
-export default connect(null, { deleteProjectTask })(ProjectTask);
+const mapStateToProps = state => ({
+    errors: state.errors
+})
+
+export default connect(mapStateToProps, { deleteProjectTask })(ProjectTask);
