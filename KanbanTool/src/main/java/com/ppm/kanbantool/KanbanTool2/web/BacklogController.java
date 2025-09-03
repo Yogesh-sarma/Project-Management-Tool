@@ -1,14 +1,17 @@
 package com.ppm.kanbantool.KanbanTool2.web;
 
 import java.security.Principal;
+import java.util.List;
 
 import javax.validation.Valid;
 
+import com.ppm.kanbantool.KanbanTool2.domain.Comment;
 import com.ppm.kanbantool.KanbanTool2.domain.ProjectTask;
 import com.ppm.kanbantool.KanbanTool2.services.MapValidationErrorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -43,7 +46,7 @@ public class BacklogController {
 		
 		ProjectTask projectTask1 = projectTaskService.addProjectTask(backlog_id, projectTask, principal.getName());
 				
-				return new ResponseEntity<ProjectTask>(projectTask1, HttpStatus.CREATED);
+		return new ResponseEntity<>(projectTask1, HttpStatus.CREATED);
 		
 	}
 	
@@ -72,15 +75,27 @@ public class BacklogController {
 		return new ResponseEntity<ProjectTask>(updatedTask,HttpStatus.OK);	
 	}
 
+	@Secured("ROLE_MANAGER")
 	@DeleteMapping("/{backlog_id}/{pt_id}")
 	public ResponseEntity<?> deleteProjectTask(@PathVariable String backlog_id, @PathVariable String pt_id, Principal principal){
 		projectTaskService.deleteByProjectSequence(backlog_id, pt_id, principal.getName());
 		
 		return new ResponseEntity<String>("Project Task '"+pt_id+"' was deleted successfully", HttpStatus.OK);
 	}
-	
-	
-	
-	
-	
+
+	@PostMapping("/comment/{backlog_id}/{pt_id}")
+	public ResponseEntity<?> addCommentToProjectTask(@RequestBody Comment comment, @PathVariable String backlog_id, @PathVariable String pt_id, Principal principal) {
+//		List<Comment> commentList = projectTaskService.addComment(backlog_id, pt_id, comment, principal.getName()).getComments();
+//		for(Comment comment1: commentList){
+//			System.out.println(comment1.getComment());
+//		}
+//		return new ResponseEntity<>(commentList, HttpStatus.OK);
+		ProjectTask pt = projectTaskService.addComment(backlog_id, pt_id, comment, principal.getName());
+		System.out.println("After commenting");
+		for(Comment comment1: pt.getComments()){
+			System.out.println(comment1.getComment());
+		}
+		return new ResponseEntity<>(pt, HttpStatus.OK);
+	}
+
 }

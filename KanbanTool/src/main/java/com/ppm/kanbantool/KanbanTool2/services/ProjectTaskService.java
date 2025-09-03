@@ -2,13 +2,20 @@ package com.ppm.kanbantool.KanbanTool2.services;
 
 
 import com.ppm.kanbantool.KanbanTool2.domain.Backlog;
+import com.ppm.kanbantool.KanbanTool2.domain.Comment;
 import com.ppm.kanbantool.KanbanTool2.domain.ProjectTask;
+import com.ppm.kanbantool.KanbanTool2.domain.User;
 import com.ppm.kanbantool.KanbanTool2.exceptions.ProjectNotFoundException;
 import com.ppm.kanbantool.KanbanTool2.repositories.BacklogRepository;
 import com.ppm.kanbantool.KanbanTool2.repositories.ProjectRepository;
 import com.ppm.kanbantool.KanbanTool2.repositories.ProjectTaskRepository;
+import com.ppm.kanbantool.KanbanTool2.repositories.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProjectTaskService {
@@ -18,6 +25,9 @@ public class ProjectTaskService {
 
 	@Autowired
 	private ProjectTaskRepository projectTaskRepository;
+
+	@Autowired
+	private UserRepository userRepository;
 	
 	@Autowired
 	private ProjectRepository projectRepository;
@@ -49,9 +59,11 @@ public class ProjectTaskService {
 		if(!projectTask.getProjectIdentifier().equals(backlog_id)) {
 			throw new ProjectNotFoundException("Project Task '"+pt_id+"' does not exist on the following Project: '"+backlog_id+"'");
 		}
-		
-		
-		return projectTaskRepository.findByProjectSequence(pt_id);
+
+
+		Hibernate.initialize(projectTask.getComments());
+
+		return projectTask;
 	}
 
 	//post
@@ -77,13 +89,19 @@ public class ProjectTaskService {
 			
 			//Setting a Initial Priority to the Project Task when is NULL 
 			if(projectTask.getPriority()==null || projectTask.getPriority()==0) {
-			projectTask.setPriority(3);
+				projectTask.setPriority(3);
 			}
 			
 			//Setting a Initial Status to the Project Task when is NULL 
 			if(projectTask.getStatus()=="" || projectTask.getStatus()==null) {
 				projectTask.setStatus("TO_DO");
 			}
+
+			if(!projectTask.getUsername().isEmpty()){
+				User user = userRepository.findByUsername(projectTask.getUsername());
+				user.addProjectTask(projectTask);
+			}
+
 			
 			return projectTaskRepository.save(projectTask);
 				
@@ -92,11 +110,31 @@ public class ProjectTaskService {
 	
 	//update
 	public ProjectTask updateByProjectSequence(ProjectTask updatedTask, String backlog_id, String pt_id, String username) {
-		
-		ProjectTask projectTask = this.findPTByProjectSequence(backlog_id, pt_id, username);	
-		projectTask = updatedTask;
-		
-		return projectTaskRepository.save(projectTask);		
+
+		ProjectTask projectTask = this.findPTByProjectSequence(backlog_id, pt_id, username);
+		// Fetch the User entity for the given username
+		User user = userRepository.findByUsername(updatedTask.getUsername());
+		if (user == null) {
+			throw new RuntimeException("User not found for username: " + updatedTask.getUsername());
+		}
+
+		// Update the fields of the existing ProjectTask entity
+		projectTask.setSummary(updatedTask.getSummary());
+		projectTask.setAcceptanceCriteria(updatedTask.getAcceptanceCriteria());
+		projectTask.setStatus(updatedTask.getStatus());
+		projectTask.setPriority(updatedTask.getPriority());
+		projectTask.setDueDate(updatedTask.getDueDate());
+		projectTask.setProjectIdentifier(updatedTask.getProjectIdentifier());
+//		projectTask.setComments(updatedTask.getComments());
+		projectTask.setAssignedTo(userRepository.findByUsername(updatedTask.getUsername()));
+		projectTask.setUsername(updatedTask.getUsername());
+
+		// Update the relationship with the User
+		if (!user.getProjectTasks().contains(projectTask)) {
+			user.addProjectTask(projectTask);
+		}
+
+		return projectTaskRepository.save(projectTask);
 		
 	}
 	
@@ -105,5 +143,13 @@ public class ProjectTaskService {
 	public void deleteByProjectSequence(String backlog_id, String pt_id, String username) {
 		ProjectTask projectTask = findPTByProjectSequence(backlog_id, pt_id, username);
 		projectTaskRepository.delete(projectTask);		
+	}
+
+	public ProjectTask addComment(String backlogId, String ptId, Comment comment, String username) {
+		comment.setUsername(username);
+		ProjectTask projectTask = findPTByProjectSequence(backlogId, ptId, username);
+		System.out.println(projectTask.getComments().size());
+		projectTask.addComment(comment);
+		return projectTaskRepository.save(projectTask);
 	}
 }

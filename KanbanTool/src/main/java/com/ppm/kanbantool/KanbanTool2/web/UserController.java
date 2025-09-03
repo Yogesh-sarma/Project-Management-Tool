@@ -2,6 +2,7 @@ package com.ppm.kanbantool.KanbanTool2.web;
 
 import javax.validation.Valid;
 
+import com.ppm.kanbantool.KanbanTool2.domain.Role;
 import com.ppm.kanbantool.KanbanTool2.domain.User;
 import com.ppm.kanbantool.KanbanTool2.payload.JWTLoginSuccessResponse;
 import com.ppm.kanbantool.KanbanTool2.payload.LoginRequest;
@@ -71,10 +72,15 @@ public class UserController {
 		
 		ResponseEntity<?> errorMap = mapValidationErrorService.MapValidationService(result);
 		if(errorMap != null) return errorMap;
-		
+
 		User newUser = userService.saveUser(user);
 		
-		return new ResponseEntity<User>(newUser, HttpStatus.CREATED);
-		
+		return new ResponseEntity<>(newUser, HttpStatus.CREATED);
 	}
+
+	@GetMapping("/all")
+	public ResponseEntity<?> getAllUsernames(){
+		return new ResponseEntity<>(userService.getAllUsernames(), HttpStatus.OK);
+	}
+
 }

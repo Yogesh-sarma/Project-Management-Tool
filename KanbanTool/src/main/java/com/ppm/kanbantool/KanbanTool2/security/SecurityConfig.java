@@ -6,6 +6,9 @@ import static com.ppm.kanbantool.KanbanTool2.security.SecurityConstants.SIGN_UP_
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,6 +18,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.ppm.kanbantool.KanbanTool2.services.CustomUserDetailsService;
@@ -65,7 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .headers().frameOptions().sameOrigin() //To enable H2 Database
         .and()
-        .authorizeRequests()
+        .authorizeRequests().expressionHandler(customWebSecurityExpressionHandler())
         .antMatchers(
                 "/",
                 "/favicon.ico",
@@ -83,4 +88,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	    http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 	}
+
+
+	@Bean
+	public RoleHierarchy roleHierarchy() {
+		RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+		String hierarchy = "ROLE_MANAGER > ROLE_MEMBER";
+		roleHierarchy.setHierarchy(hierarchy);
+		return roleHierarchy;
+	}
+
+	@Bean
+	public SecurityExpressionHandler<FilterInvocation> customWebSecurityExpressionHandler() {
+		DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
+		expressionHandler.setRoleHierarchy(roleHierarchy());
+		return expressionHandler;
+	}
+
 }

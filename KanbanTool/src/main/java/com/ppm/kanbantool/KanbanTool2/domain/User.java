@@ -5,18 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
@@ -33,7 +22,6 @@ public class User implements UserDetails {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
 
     @Email(message = "Username needs to be an email")
     @NotBlank(message = "username is required")
@@ -57,15 +45,70 @@ public class User implements UserDetails {
 	private Date update_At;
 	
 	//OneToMany with Project Relationship
-	@OneToMany(cascade = CascadeType.REFRESH, fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
+	@ManyToMany(cascade = CascadeType.REFRESH, fetch = FetchType.EAGER, mappedBy = "user")
 	private List<Project> projects = new ArrayList<>();
-	
-	
+
+	@ManyToMany()
+	@JoinTable(name = "user_roles",
+				joinColumns = @JoinColumn(
+						name="user_id", referencedColumnName = "id"),
+			    inverseJoinColumns = @JoinColumn(
+						name="role_id", referencedColumnName = "id"))
+	private Collection<Role> roles;
+
+	@Transient
+	private String role;
+
+	@OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ProjectTask> projectTasks = new ArrayList<>();
 
 	public User() {
 	}
-	
-	
+
+	public void addProjectTask(ProjectTask projectTask) {
+		projectTasks.add(projectTask);
+		projectTask.setAssignedTo(this); // Set the bi-directional relationship
+	}
+
+	public void removeProjectTask(ProjectTask projectTask) {
+		projectTasks.remove(projectTask);
+		projectTask.setAssignedTo(null); // Clear the bi-directional relationship
+	}
+
+	public List<ProjectTask> getProjectTasks() {
+		return projectTasks;
+	}
+
+	public void setProjectTasks(List<ProjectTask> projectTasks) {
+		for(ProjectTask projectTask: projectTasks){
+			addProjectTask(projectTask);
+		}
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
+
+	public List<Project> getProjects() {
+		return projects;
+	}
+
+	public void setProjects(List<Project> projects) {
+		this.projects = projects;
+	}
+
+	public Collection<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Collection<Role> roles) {
+		this.roles = roles;
+	}
+
 	public Long getId() {
 		return id;
 	}

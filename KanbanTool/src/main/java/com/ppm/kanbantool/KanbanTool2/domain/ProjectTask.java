@@ -1,17 +1,10 @@
 package com.ppm.kanbantool.KanbanTool2.domain;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -51,9 +44,55 @@ public class ProjectTask {
 	
 	@JsonFormat(pattern = "yyyy-mm-dd")
 	private Date updated_At;
-	
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTask", orphanRemoval = true)
+	private List<Comment> comments = new ArrayList<>();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	@JsonIgnore
+	private User assignedTo;
+
+	private String username;
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public User getAssignedTo() {
+		return assignedTo;
+	}
+
+	public void setAssignedTo(User user) {
+		this.assignedTo = user;
+	}
+
 	public ProjectTask() {
-	}	
+	}
+
+	public List<Comment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<Comment> comments) {
+		for(Comment comment: comments){
+			addComment(comment);
+		}
+	}
+
+	public void addComment(Comment comment) {
+		comment.setProjectTask(this); // Set the parent in the child
+		this.comments.add(comment);  // Add the child to the parent's list
+	}
+
+	public void removeComment(Comment comment) {
+		comment.setProjectTask(null); // Break the parent link in the child
+		this.comments.remove(comment); // Remove the child from the parent's list
+	}
 
 	public Long getId() {
 		return id;
@@ -155,11 +194,19 @@ public class ProjectTask {
 
 	@Override
 	public String toString() {
-		return "ProjectTask [id=" + id + ", projectSequence=" + projectSequence + ", summary=" + summary
-				+ ", acceptanceCriteria=" + acceptanceCriteria + ", status=" + status + ", priority=" + priority
-				+ ", projectIdentifier=" + projectIdentifier + ", dueDate=" + dueDate + ", created_At=" + created_At
-				+ ", updated_At=" + updated_At + "]";
+		return "ProjectTask{" +
+				"id=" + id +
+				", projectSequence='" + projectSequence + '\'' +
+				", summary='" + summary + '\'' +
+				", acceptanceCriteria='" + acceptanceCriteria + '\'' +
+				", status='" + status + '\'' +
+				", priority=" + priority +
+				", backlog=" + backlog +
+				", projectIdentifier='" + projectIdentifier + '\'' +
+				", dueDate=" + dueDate +
+				", created_At=" + created_At +
+				", updated_At=" + updated_At +
+				", comments=" + comments +
+				'}';
 	}
-	
-	
 }

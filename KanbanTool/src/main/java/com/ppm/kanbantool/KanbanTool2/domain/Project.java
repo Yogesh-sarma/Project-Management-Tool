@@ -1,18 +1,10 @@
 package com.ppm.kanbantool.KanbanTool2.domain;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -30,7 +22,7 @@ public class Project {
 	private String projectName;
 	
 	@NotBlank(message = "Project Identifier is required")
-	@Size(min=4, max=5, message = "Please use 4 or 5 characteres")
+	@Size(min=4, max=5, message = "Please use 4 or 5 characters")
 	@Column(updatable = false, unique = true)
 	private String projectIdentifier;
 	
@@ -54,15 +46,28 @@ public class Project {
 	@JsonIgnore // It won't show this backlog (with all project tasks) object when search a project by id    
 	private Backlog backlog;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToMany()
+	@JoinTable(
+			name = "project_users",
+			joinColumns = @JoinColumn(name = "project_id", referencedColumnName = "id"),
+			inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id")
+	)
 	@JsonIgnore
-	private User user;
+	private List<User> user = new ArrayList<>();
 	
 	private String projectLeader;
-	
-	
-	
-	
+
+	@Transient
+	private List<String> listOfUsers;
+
+	public List<String> getListOfUsers() {
+		return listOfUsers;
+	}
+
+	public void setListOfUsers(List<String> listOfUsers) {
+		this.listOfUsers = listOfUsers;
+	}
+
 	public String getProjectLeader() {
 		return projectLeader;
 	}
@@ -72,16 +77,13 @@ public class Project {
 		this.projectLeader = projectLeader;
 	}
 
-
-	public User getUser() {
+	public List<User> getUser() {
 		return user;
 	}
 
-
-	public void setUser(User user) {
+	public void setUser(List<User> user) {
 		this.user = user;
 	}
-
 
 	public Backlog getBacklog() {
 		return backlog;
